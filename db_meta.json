@@ -1,1 +1,16 @@
-{}
+{
+    "product": [
+        {
+            "name": "ID",
+            "type": "int"
+        },
+        {
+            "name": "title",
+            "type": "str"
+        },
+        {
+            "name": "price",
+            "type": "int"
+        }
+    ]
+}
