@@ -40,6 +40,3 @@ uv run database
 2. [Демонстрация работы crud](https://asciinema.org/a/GtiEHATunMLROrVc)
 3. [Демонстрация работы декораторов](https://asciinema.org/a/C9xZ3MuRFtVmd2Dp)
 4. [Финальная демонстрация работы](https://asciinema.org/a/JCRakQxkaVRNRdfc)
-
-
-
