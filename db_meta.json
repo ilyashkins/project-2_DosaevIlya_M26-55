@@ -1,16 +1,20 @@
 {
-    "product": [
+    "users": [
         {
             "name": "ID",
             "type": "int"
         },
         {
-            "name": "title",
+            "name": "name",
             "type": "str"
         },
         {
-            "name": "price",
+            "name": "age",
             "type": "int"
+        },
+        {
+            "name": "is_active",
+            "type": "bool"
         }
     ]
 }
