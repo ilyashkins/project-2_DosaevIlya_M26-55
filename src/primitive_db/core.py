@@ -1,3 +1,7 @@
+from primitive_db.decorators import confirm_action, handle_db_errors, log_time
+
+
+@handle_db_errors
 def create_table(metadata, table_name, columns):
     """Создает таблицу, проверяет типы и добавляет ID."""
     if table_name in metadata:
@@ -19,13 +23,15 @@ def create_table(metadata, table_name, columns):
             return None
         
         parsed_columns.append({"name": name, "type": col_type})
-
     metadata[table_name] = parsed_columns
     
     cols_str = ", ".join(f"{c['name']}:{c['type']}" for c in parsed_columns)
     print(f'Таблица "{table_name}" успешно создана со столбцами: {cols_str}')
     return metadata
 
+
+@confirm_action("удаление таблицы")
+@handle_db_errors
 def drop_table(metadata, table_name):
     """Удаляет таблицу из метаданных."""
     if table_name not in metadata:
@@ -35,6 +41,8 @@ def drop_table(metadata, table_name):
     print(f'Таблица "{table_name}" успешно удалена.')
     return metadata
 
+@log_time
+@handle_db_errors
 def insert(metadata, table_name, values):
     """Вставляет новую запись в таблицу."""
     if table_name not in metadata:
@@ -48,6 +56,8 @@ def insert(metadata, table_name, values):
 
     return values
 
+@log_time
+@handle_db_errors
 def select(table_data, where_clause=None):
     """Возвращает данные по условию или все данные."""
     if not where_clause:
@@ -63,6 +73,7 @@ def select(table_data, where_clause=None):
             result.append(row)
     return result
 
+@handle_db_errors
 def update(table_data, set_clause, where_clause):
     """Обновляет данные по условию."""
     updated_count = 0
@@ -75,11 +86,11 @@ def update(table_data, set_clause, where_clause):
         if match:
             for set_key, set_value in set_clause.items():
                 row[set_key] = set_value
-            updated_count += 1
-            
+            updated_count += 1          
     return table_data, updated_count
 
-
+@confirm_action("удаление заисей")
+@handle_db_errors
 def delete(table_data, where_clause):
     """Удаляет данные по условию."""
     new_data = []

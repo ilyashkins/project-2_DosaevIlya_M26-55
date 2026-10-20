@@ -1,26 +1,10 @@
 [
     {
         "ID": 2,
-        "name": "Anna",
-        "age": 22,
-        "is_active": false
+        "name": "Adam"
     },
     {
-        "ID": 7,
-        "name": "Bob",
-        "age": 35,
-        "is_active": false
-    },
-    {
-        "ID": 8,
-        "name": "Charlie",
-        "age": 22,
-        "is_active": true
-    },
-    {
-        "ID": 9,
-        "name": "Charlie",
-        "age": 22,
-        "is_active": true
+        "ID": 3,
+        "name": "IlyaDosaev"
     }
 ]

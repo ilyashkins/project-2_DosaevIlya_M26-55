@@ -3,7 +3,8 @@ import shlex
 import prompt
 from prettytable import PrettyTable
 
-from primitive_db.core import create_table, delete, drop_table, select, update
+from primitive_db.core import create_table, delete, drop_table, insert, select, update
+from primitive_db.decorators import create_cacher
 from primitive_db.parser import parse_condition
 from primitive_db.utils import (
     load_metadata,
@@ -13,7 +14,6 @@ from primitive_db.utils import (
 )
 
 DB_FILE = "db_meta.json"
-
 
 def print_help():
     """Выводит справку по командам."""
@@ -34,6 +34,8 @@ def run():
     """Основной цикл программы."""
     print("\n***База данных***")
     print_help()
+
+    select_cache = create_cacher()
 
     while True:
         user_input = prompt.string(">>>Введите команду: ")
@@ -70,6 +72,7 @@ def run():
             new_metadata = create_table(metadata, table_name, columns)
             if new_metadata is not None:  # Если таблица создалась, сохраняем
                 save_metadata(DB_FILE, new_metadata)
+                select_cache.cache.clear()  #сброс кэша
                 
         elif command == "drop_table":
             if len(args) < 2:
@@ -80,27 +83,18 @@ def run():
             new_metadata = drop_table(metadata, table_name)
             if new_metadata is not None:
                 save_metadata(DB_FILE, new_metadata)
+                select_cache.cache.clear()  #сброс кэша
 
 
         elif command == "insert" and len(args) > 2 and args[1] == "into":
             table_name = args[2]
             
-            
-            if table_name not in metadata:  #Проверяем, существует ли таблица
+            if table_name not in metadata:
                 print(f'Ошибка: Таблица "{table_name}" не существует.')
                 continue
                 
             val_str = user_input.split("values")[1].strip()[1:-1]
             values = [v.strip().strip('"\'') for v in val_str.split(",")]
-
-            expected_cols = len(metadata[table_name]) - 1 
-            #Проверяем кол-во значений минус ID
-            if len(values) != expected_cols:
-                print(
-                    f"Ошибка: Неверное количество значений. "
-                    f"Таблица '{table_name}' требует {expected_cols} знач."
-                )
-                continue
 
             for i, v in enumerate(values):
                 if v.lower() == 'true': 
@@ -110,6 +104,14 @@ def run():
                 elif v.isdigit(): 
                     values[i] = int(v)
 
+            # Вызываем функцию из core.py
+            res = insert(metadata, table_name, values)
+            
+            # Если None останавливаем
+            if res is None:
+                continue
+
+            # Если всё ок, генерируем ID и сохраняем
             table_data = load_table_data(table_name)
             new_id = max([row.get("ID", 0) for row in table_data], default=0) + 1
             row_dict = {"ID": new_id}
@@ -119,6 +121,7 @@ def run():
 
             table_data.append(row_dict)
             save_table_data(table_name, table_data)
+            select_cache.cache.clear()  #сброс кэша
             print(f'Запись с ID={new_id} успешно добавлена.')
 
         elif command == "select" and args[1] == "from":
@@ -132,7 +135,7 @@ def run():
             
             # передаем args в парсер
             where_clause = parse_condition(args, "where")
-            result = select(table_data, where_clause)
+            result = select_cache(user_input, lambda: select(table_data, where_clause))
 
             if result:
                 table = PrettyTable()
@@ -163,6 +166,7 @@ def run():
 
             if count > 0:
                 save_table_data(table_name, updated_data)
+                select_cache.cache.clear()  #сброс кэша
                 print(f"Обновлено записей: {count}")
             else:
                 print("Ничего не найдено, никого не обновили.")
@@ -180,13 +184,16 @@ def run():
                 continue
 
             table_data = load_table_data(table_name)
-            new_data, count = delete(table_data, where_clause)
-
-            if count > 0:
-                save_table_data(table_name, new_data)
-                print(f"Удалено записей: {count}")
-            else:
-                print("Нечего удалять.")
+            #декоратор вернёт none поэтому исправляю
+            res = delete(table_data, where_clause)
+            if res is not None:
+                new_data, count = res
+                if count > 0:
+                    save_table_data(table_name, new_data)
+                    select_cache.cache.clear()  #сброс кэша
+                    print(f"Удалено записей: {count}")
+                else:
+                    print("Нечего удалять.")
 
 
         elif command == "info":
