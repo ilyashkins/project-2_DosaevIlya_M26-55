@@ -3,6 +3,7 @@ import shlex
 import prompt
 from prettytable import PrettyTable
 
+from primitive_db.constants import META_FILE
 from primitive_db.core import create_table, delete, drop_table, insert, select, update
 from primitive_db.decorators import create_cacher
 from primitive_db.parser import parse_condition
@@ -13,7 +14,6 @@ from primitive_db.utils import (
     save_table_data,
 )
 
-DB_FILE = "db_meta.json"
 
 def print_help():
     """Выводит справку по командам."""
@@ -49,7 +49,7 @@ def run():
             continue
 
         command = args[0]
-        metadata = load_metadata(DB_FILE)
+        metadata = load_metadata(META_FILE)
 
         if command == "exit":
             break
@@ -71,7 +71,7 @@ def run():
             
             new_metadata = create_table(metadata, table_name, columns)
             if new_metadata is not None:  # Если таблица создалась, сохраняем
-                save_metadata(DB_FILE, new_metadata)
+                save_metadata(META_FILE, new_metadata)
                 select_cache.cache.clear()  #сброс кэша
                 
         elif command == "drop_table":
@@ -82,7 +82,7 @@ def run():
             table_name = args[1]
             new_metadata = drop_table(metadata, table_name)
             if new_metadata is not None:
-                save_metadata(DB_FILE, new_metadata)
+                save_metadata(META_FILE, new_metadata)
                 select_cache.cache.clear()  #сброс кэша
 
 

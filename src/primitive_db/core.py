@@ -1,3 +1,4 @@
+from primitive_db.constants import VALID_TYPES
 from primitive_db.decorators import confirm_action, handle_db_errors, log_time
 
 
@@ -8,7 +9,6 @@ def create_table(metadata, table_name, columns):
         print(f'Ошибка: Таблица "{table_name}" уже существует.')
         return None  # Возвращаем None при ошибке
 
-    valid_types = {"int", "str", "bool"}
     parsed_columns = [{"name": "ID", "type": "int"}]
 
     for col in columns:
@@ -18,7 +18,7 @@ def create_table(metadata, table_name, columns):
         
         name, col_type = col.split(":", 1)
         
-        if col_type not in valid_types:
+        if col_type not in VALID_TYPES:
             print(f"Некорректное значение: {col_type}. Попробуйте снова.")
             return None
         
